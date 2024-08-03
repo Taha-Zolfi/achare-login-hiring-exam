@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>صفحه اصلی</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+</head>
+<body>
+    <style>
+        body {
+            background-color: #0e0e0e;
+            color: aliceblue;
+            text-align: center;
+            font-family: "Rubik", sans-serif;
+        }
+        h1{
+            font-size: 5vw;
+            direction: rtl;
+        }
+        .login {
+            background-color: #0e0e0e;
+            border: 1px solid green;
+            border-radius: 15px;
+            color:aliceblue;
+            text-decoration: none;
+            padding: 1rem;
+            font-size: 4vw;
+            transition: all 200ms ease-in-out;
+            
+        }
+        .login:hover {
+            background-color: green;
+            color: #0e0e0e;
+        }
+        .logout {
+            background-color: #0e0e0e;
+            border: 1px solid red;
+            border-radius: 15px;
+            color:aliceblue;
+            text-decoration: none;
+            padding: 1rem;
+            font-size: 4vw;
+            transition: all 200ms ease-in-out;
+            
+        }
+        .logout:hover {
+            background-color: red;
+            color: #0e0e0e;
+        }
+    </style>
+    
+    {% if user.is_authenticated %}
+    <div class="explain" id="explainText"><h1></h1></div>
+    <a class="logout" href="/logout">خروج</a>
+    {% else %}
+    <h1>ورود کن</h1>
+    <a class="login" href="/login">ورود</a>
+    {% endif %}
+
+
+    <script>
+
+
+
+        const typedText = "سلام {{ user.username }} خوش اومدی!";
+        const explainText = document.getElementById("explainText").querySelector("h1");
+    
+        function typeWriter() {
+            let i = 0;
+            setTimeout(() => {
+                const typingInterval = setInterval(() => {
+                    if (i < typedText.length) {
+                        explainText.textContent += typedText.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typingInterval);
+                    }
+                }, 50);
+            }, 100);
+        }
+    
+        // Trigger the typing animation
+        window.onload = function () {
+            typeWriter();
+        };
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phone Number Form</title>
+</head>
+<body>
+    <h1>verify code</h1>
+    <form method="post">
+        {% csrf_token %}
+        <label for="code">Enter Verification Code:</label>
+        <input type="text" id="code" name="code" required>
+        <button type="submit">Verify Code</button>
+    </form>
+    
+    
+</body>
+</html>

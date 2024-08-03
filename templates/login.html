@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #0e0e0e;
+            color: #ffffff;
+            font-family: "Rubik", sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            direction: rtl;
+        }
+
+        .form-container {
+            background-color: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            opacity: 0;
+            transform: translateY(-20px);
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .form-container form {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-container label {
+            margin-bottom: 5px;
+            padding-bottom: 1rem;
+        }
+
+        .form-container input[type="text"],
+        .form-container input[type="password"] {
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #3e3e3e;
+            border-radius: 4px;
+            background-color: #2e2e2e;
+            color: #ffffff;
+            transition: border-color 0.3s;
+        }
+
+        .form-container input:focus {
+            border-color: #3a6ea5;
+        }
+
+        .form-container input.invalid {
+            border-color: red;
+        }
+
+        .form-container button {
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
+            background-color: #3a6ea5;
+            color: #ffffff;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.3s;
+            font-family: "Rubik", sans-serif;
+        }
+
+        .form-container button:hover {
+            background-color: #315a89;
+            transform: scale(1.05);
+        }
+
+        .form-container p {
+            margin-bottom: 15px;
+        }
+
+        #verificationSection, #passwordSection, #signupSection {
+            display: none;
+            animation: slideIn 0.5s forwards;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <form id="loginForm" method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <label for="number">شماره تلفن خود را وارد کنید:</label>
+            <input type="text" id="number" name="number" required>
+            <button type="submit">ارسال کد</button>
+        </form>
+
+        <div id="verificationSection">
+            <p>کد تایید شما: <span id="verificationCode"></span> میباشد</p>
+            <form id="verifyCodeForm" method="post" action="{% url 'verify_code' %}">
+                {% csrf_token %}
+                <label for="code">کد تایید را وارد کنید:</label>
+                <input type="text" id="code" name="code" required>
+                <button type="submit">تایید کد</button>
+            </form>
+        </div>
+
+        <div id="passwordSection">
+            <form id="passwordForm" method="post" action="{% url 'authenticate_user' %}">
+                {% csrf_token %}
+                <label for="password">رمز عبور:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit">ورود</button>
+            </form>
+        </div>
+
+        <div id="signupSection">
+            <form id="signupForm" method="post" action="{% url 'signup' %}">
+                {% csrf_token %}
+                <label for="username">نام کاربری:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="signupPassword">رمز عبور:</label>
+                <input type="password" id="signupPassword" name="password" required>
+                <button type="submit">ثبت نام</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function validateInput(input, minLength, maxLength) {
+            if (input.value.length < minLength || input.value.length > maxLength) {
+                input.classList.add('invalid');
+                return false;
+            } else {
+                input.classList.remove('invalid');
+                return true;
+            }
+        }
+
+        document.getElementById('loginForm').onsubmit = function(event) {
+            event.preventDefault();
+            var numberInput = document.getElementById('number');
+            if (!validateInput(numberInput, 11, 11)) {
+                alert('شماره تلفن باید 11 رقم باشد.');
+                return;
+            }
+
+            var form = event.target;
+            var data = new FormData(form);
+            fetch(form.action, {
+                method: form.method,
+                headers: {'X-CSRFToken': data.get('csrfmiddlewaretoken')},
+                body: data
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'banned') {
+                    window.location.href = '/banned/';
+                } else if (data.status === 'exists') {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('passwordSection').style.display = 'block';
+                } else if (data.status === 'new') {
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('verificationCode').textContent = data.code;
+                    document.getElementById('verificationSection').style.display = 'block';
+                }
+            });
+        };
+
+        document.getElementById('verifyCodeForm').onsubmit = function(event) {
+            event.preventDefault();
+            var form = event.target;
+            var data = new FormData(form);
+            fetch(form.action, {
+                method: form.method,
+                headers: {'X-CSRFToken': data.get('csrfmiddlewaretoken')},
+                body: data
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'banned') {
+                    window.location.href = '/banned/';
+                } else if (data.status === 'verified') {
+                    document.getElementById('verificationSection').style.display = 'none';
+                    document.getElementById('signupSection').style.display = 'block';
+                } else {
+                    alert('کد تایید اشتباه است');
+                }
+            });
+        };
+
+        document.getElementById('passwordForm').onsubmit = function(event) {
+            event.preventDefault();
+            var form = event.target;
+            var data = new FormData(form);
+            fetch(form.action, {
+                method: form.method,
+                headers: {'X-CSRFToken': data.get('csrfmiddlewaretoken')},
+                body: data
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'banned') {
+                    window.location.href = '/banned/';
+                } else if (data.status === 'success') {
+                    window.location.href = '/';
+                } else {
+                    alert('رمز عبور اشتباه');
+                }
+            });
+        };
+
+        document.getElementById('signupForm').onsubmit = function(event) {
+            event.preventDefault();
+            var usernameInput = document.getElementById('username');
+            var passwordInput = document.getElementById('signupPassword');
+
+            if (!validateInput(usernameInput, 4, 12)) {
+                alert('نام کاربری باید بین 4 تا 12 کاراکتر باشد.');
+                return;
+            }
+
+            if (!validateInput(passwordInput, 8, 16)) {
+                alert('رمز عبور باید بین 8 تا 16 کاراکتر باشد.');
+                return;
+            }
+
+            var form = event.target;
+            var data = new FormData(form);
+            fetch(form.action, {
+                method: form.method,
+                headers: {'X-CSRFToken': data.get('csrfmiddlewaretoken')},
+                body: data
+            }).then(response => response.json()).then(data => {
+                if (data.status === 'banned') {
+                    window.location.href = '/banned/';
+                } else if (data.status === 'success') {
+                    window.location.href = '/';
+                } else {
+                    alert('مشکلی پیش آمده');
+                }
+            });
+        };
+    </script>
+</body>
+</html>
