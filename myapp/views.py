@@ -37,12 +37,13 @@ def login_view(request):
     if request.method == "POST":
         phone = request.POST.get('number')
         if CustomUser.objects.filter(phone_number=phone).exists():
+            request.session['phone'] = phone  # Store the phone in session
             response_data = {'status': 'exists'}
             return JsonResponse(response_data)
         else:
             code = generate_verification_code()
             request.session['verification_code'] = code
-            request.session['phone'] = phone
+            request.session['phone'] = phone  # Store the phone in session
             response_data = {'status': 'new', 'code': code}
             return JsonResponse(response_data)
         
@@ -65,6 +66,7 @@ def verify_code_view(request):
 
     return render(request, 'verify_code.html')
 
+
 def authenticate_user_view(request):
     ip_address = get_client_ip(request)
     if is_ip_blocked(ip_address):
@@ -72,16 +74,25 @@ def authenticate_user_view(request):
 
     if request.method == "POST":
         phone = request.session.get('phone')
+        if phone is None:
+
+            return JsonResponse({'status': 'error', 'message': 'Phone number not found in session'})
+            
+        
         password = request.POST.get('password')
-
-        user = authenticate(request, username=phone, password=password)
-
-        if user is not None:
-            login(request, user)
-            return JsonResponse({'status': 'success'})
-        else:
-            # Log the failed attempt
-            FailedLoginAttempt.objects.create(ip_address=ip_address)
+        try:
+            user = CustomUser.objects.get(phone_number=phone)
+            username = user.username
+            user = authenticate(request, username=username, password=password)
+            
+            if user is not None:
+                login(request, user)
+                return JsonResponse({'status': 'success'})
+            else:
+                # Log the failed attempt
+                FailedLoginAttempt.objects.create(ip_address=ip_address)
+                return JsonResponse({'status': 'error'})
+        except CustomUser.DoesNotExist:
             return JsonResponse({'status': 'error'})
 
 def signup_view(request):

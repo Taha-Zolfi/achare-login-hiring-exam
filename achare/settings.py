@@ -51,7 +51,9 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'achare.urls'
-AUTH_USER_MODEL = 'myapp.customuser'
+
+AUTH_USER_MODEL = 'myapp.CustomUser'
+
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
