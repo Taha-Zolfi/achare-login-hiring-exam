@@ -2,6 +2,9 @@
 
 This project is a multi-step login form designed as a recruitment test for Achareh. It allows users to authenticate using their phone numbers and includes features such as dynamic transitions and user-friendly animations.
 
+## Live
+- https://achare-taupe.vercel.app/
+
 ## Features
 
 - **Multi-Step Authentication**:
